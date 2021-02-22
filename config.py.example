@@ -1,2 +1,7 @@
 USERNAME = ""
 PASSWORD = ""
+# a valid, unused one-time passcode (generated at
+# https://identity.umd.edu/mfaprofile)
+PASSCODE = 0
+auth_cookies = None
+identity_umd_jsession_id = None
