@@ -8,16 +8,34 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
-from config import (USERNAME, PASSWORD, PASSCODE, auth_cookies,
-    identity_umd_jsession_id)
+from config import USERNAME, PASSWORD, auth_cookies, identity_umd_jsession_id
 
 
 class UMDAuth():
+    CODES_PATH = Path(__file__).parent / "codes.txt"
+
     def __init__(self, auth_cookies=None, identity_umd_jsession_id=None):
         # the cookies we get after we auth, which is all we need to get access
         # to other umd websites.
         self.auth_cookies = auth_cookies
         self.identity_umd_jsession_id = identity_umd_jsession_id
+
+
+        if not self.CODES_PATH.exists():
+            raise FileNotFoundError("Could not find a codes.txt file at "
+                f"{self.CODES_PATH}.")
+
+        self.codes = []
+        with open(self.CODES_PATH) as f:
+            for line in f.readlines():
+                # allow empty lines
+                if line.isspace():
+                    continue
+                code = int(line)
+                self.codes.append(code)
+
+        print(f"initialized with codes {self.codes}")
+
 
     def _new_session(self):
         """
@@ -27,6 +45,7 @@ class UMDAuth():
         "authenticated" here just means that this session has the `auth_cookies`
         we retrieved set, which is all being authenticated means to umd.
         """
+        print("creating a new session")
         if not self.auth_cookies:
             self.authenticate()
         session = requests.Session()
@@ -62,6 +81,19 @@ class UMDAuth():
         We're making more than a few requests in this method, so this could take
         multiple seconds to complete (around 5-6 seconds for me).
         """
+        generate_codes_after = False
+        if len(self.codes) == 0:
+            raise ValueError("Need at least one authentication code to log in.")
+        if len(self.codes) == 1:
+            # we're down to our last code - authenticate and then generate
+            # another set.
+            print("down to our last code, generating more after this "
+                "authentication")
+            generate_codes_after = True
+
+        # use up the first code available (starting from the front of the list)
+        code = self.codes.pop(0)
+        print(f"authenticating with code {code}")
 
         # A useful reference: "Detailed Trace of a Shibboleth Login".
         # https://docs.shib.ncsu.edu/docs/shiblogindetails.html
@@ -122,7 +154,7 @@ class UMDAuth():
             "sid": sid,
             "device": "phone1",
             "factor": "Passcode",
-            "passcode": f"{PASSCODE}",
+            "passcode": f"{code}",
             "out_of_date": "False",
             "days_out_of_date": "0",
             "days_to_block": "None"
@@ -171,7 +203,15 @@ class UMDAuth():
         print("Authenticated. Creds: ", self.auth_cookies,
             self.identity_umd_jsession_id)
 
+        # we popped a code off our codes list at the beginning of this method,
+        # so we need to remove it from our codes file as wll.
+        self._write_codes()
+
+        if generate_codes_after:
+            self.generate_new_codes()
+
     def generate_new_codes(self):
+        print("generating new codes")
         session = self._new_session()
 
         data = {
@@ -188,11 +228,16 @@ class UMDAuth():
         for code_div in print_window.find_all("div", class_="SubDisplayElementFlex"):
             codes.append(int(code_div.text))
 
+        # our old codes are invalidate now, so overwrite them, both in the file
+        # and in our `self.codes`.
+        self.codes = codes
+        self._write_codes()
+
         return codes
 
     def send_daily_symptom_survey(self):
-        session = requests.Session()
-        requests.utils.add_dict_to_cookiejar(session.cookies, self.auth_cookies)
+        print("sending daily symptom survey")
+        session = self._new_session()
 
         r = session.get("https://return.umd.edu/api/daily/")
         data = json.loads(r.content)
@@ -209,3 +254,10 @@ class UMDAuth():
                "&symptomsSunday=false&lateShift=false")
         r = session.post(url, headers=headers, json=data)
         print(r.status_code, r.content)
+
+    def _write_codes(self):
+        print(f"writing codes {self.codes} to file")
+        with open(self.CODES_PATH, "w") as f:
+            str_codes = [str(code) for code in self.codes]
+            write_str = "\n".join(str_codes)
+            f.write(write_str)
