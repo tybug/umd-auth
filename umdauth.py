@@ -60,21 +60,25 @@ class UMDAuth():
 
         Notes
         -----
-        Interestingly, websites under umd control seem to have a hierarchy.
+        Interestingly, websites under umd control seem to have a hierarchy of
+        some kind. My best current approximation of this hierarchy is a
+        partially ordered set. In the notation below, (a, b) means that "a
+        grants access to b". So, the "higher up" in the hierarchy a website is,
+        the more sites it grants access to.
 
-        If you use CAS to log into a website of tier X, you can then freely
-        access any website in a tier ≥X, but the opposite is not true.
-        To take advantage of this, we log into the highest tier website we can,
-        so the session applies to any other site we care to access as well.
+        By "grants access" I mean that if you use CAS to log into website a,
+        then you can freely access website b without needing ot re-authenticate.
+        Note that the opposite is not true.
 
-        Tier 1
-        ~~~~~~
-        * https://identity.umd.edu/mfaprofile
+        1 = https://identity.umd.edu/mfaprofile
+        2 = https://app.testudo.umd.edu/main/profile
+        3 = http://umd.instructure.com/
+        4 = https://return.umd.edu/covid/returnstatus
 
-        Tier 2
-        ~~~~~~
-        * http://umd.instructure.com/
-        * https://return.umd.edu/covid/returnstatus
+        (1, 3)
+        (1, 4)
+        (2, 3)
+        (2, 4)
 
         Warnings
         --------
