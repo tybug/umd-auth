@@ -1,6 +1,8 @@
 from pathlib import Path
 import urllib
 import json
+import re
+from dataclasses import dataclass, field
 
 import requests
 from requests.utils import add_dict_to_cookiejar
@@ -74,11 +76,16 @@ class UMDAuth():
         2 = https://app.testudo.umd.edu/main/profile
         3 = http://umd.instructure.com/
         4 = https://return.umd.edu/covid/returnstatus
+        5 = https://dsonline2.umd.edu/dpms/cas.do
 
         (1, 3)
         (1, 4)
+        (1, 5)
         (2, 3)
         (2, 4)
+        (2, 5)
+        (3, 5)
+        (4, 5)
 
         Warnings
         --------
@@ -259,9 +266,35 @@ class UMDAuth():
         r = session.post(url, headers=headers, json=data)
         print(r.status_code, r.content)
 
+    def get_dining_dollars(self):
+        session = self._new_session()
+        # we have to make this request first, before any others, or our
+        # authentication from other umd sites doesn't carry over
+        session.get("https://dsonline2.umd.edu/dpms/cas.do")
+
+        r = session.get("https://dsonline2.umd.edu/dpms/baltrans.do")
+        soup = BeautifulSoup(r.text, features="lxml")
+        amounts = soup.select(".card")[0].find_all(text=re.compile(r".*\$.*"))
+        amounts = [float(amount.strip().replace("$", "")) for amount in amounts]
+        # first element is current amount of dining dollars, second is
+        # current amount of rollover dining dollars
+        current = amounts[0]
+        rollover = amounts[1]
+        return DiningDollars(current, rollover)
+
     def _write_codes(self):
         print(f"writing codes {self.codes} to file")
         with open(self.CODES_PATH, "w") as f:
             str_codes = [str(code) for code in self.codes]
             write_str = "\n".join(str_codes)
             f.write(write_str)
+
+
+@dataclass
+class DiningDollars:
+    current_amount: float
+    rollover_amount: float
+    total_amount: float = field(init=False)
+
+    def __post_init__(self):
+        self.total_amount = self.current_amount + self.rollover_amount
