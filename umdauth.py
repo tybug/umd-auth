@@ -92,15 +92,22 @@ class UMDAuth:
         3 = http://umd.instructure.com/
         4 = https://return.umd.edu/covid/returnstatus
         5 = https://dsonline2.umd.edu/dpms/cas.do
+        6 = https://www.myuhc.umd.edu/home.aspx
 
         (1, 3)
         (1, 4)
         (1, 5)
+        (1, 6)
         (2, 3)
         (2, 4)
         (2, 5)
+        (2, 6)
         (3, 5)
+        (3, 6)
         (4, 5)
+        (4, 6)
+        (5, 4)
+        (5, 6)
 
         Sites 1 and 2 are equally high up in the hierarchy, but neither grants
         access to the other. So we have to pick one to authenticate with. I
