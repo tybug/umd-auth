@@ -11,7 +11,19 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-class UMDAuth():
+class UMDAuth:
+    """
+    Provides methods to take actions with umd on your behalf. You can, for
+    instance, submit a daily covid symptom survey (telling them you have no
+    symptoms), or get your dining dollars balance.
+
+    Authentication happens automatically. You must provide at least one auth
+    code (ie backup code) in a ``codes.txt`` file in the same directory as this
+    file to kickstart the authentication. From there, we will automatically
+    request new auth codes as necessary, and write them back to ``codes.txt``.
+    We consume one auth code each time we authenticate.
+
+    """
     CODES_PATH = Path(__file__).parent / "codes.txt"
 
     def __init__(self, username, password, auth_cookies=None,
