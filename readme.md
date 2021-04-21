@@ -38,7 +38,6 @@ print(dd.total_amount, dd.current_amount, dd.rollover_amount)
 # auth.send_daily_symptom_survey()
 ```
 
-
 ### Disclaimer
 
 I'm releasing this in case others who are similarly inclined towards automation of their umd account are interested in using it or referencing my implementation.
