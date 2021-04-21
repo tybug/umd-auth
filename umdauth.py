@@ -21,7 +21,6 @@ class UMDAuth():
         self.auth_cookies = auth_cookies
         self.identity_jsession_id = identity_jsession_id
 
-
         if not self.CODES_PATH.exists():
             raise FileNotFoundError("Could not find a codes.txt file at "
                 f"{self.CODES_PATH}.")
@@ -69,7 +68,7 @@ class UMDAuth():
 
         By "grants access" I mean that if you use CAS to log into website a,
         then you can freely access website b without needing ot re-authenticate.
-        Note that the opposite is not true.
+        Note that the opposite is not necessarily true.
 
         1 = https://identity.umd.edu/mfaprofile
         2 = https://app.testudo.umd.edu/main/profile
