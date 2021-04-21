@@ -296,6 +296,9 @@ class UMDAuth:
 
         r = session.get("https://return.umd.edu/api/daily/")
         data = json.loads(r.content)
+        print(f"received data {data} from return.umd.edu/api/daily")
+        data["survey"]["symptomNone"] = True
+        print(f"sending response of {data} to daily symptom survey")
 
         # we have to set the x-xsrf-token header for our POST to be accepted,
         # even though it's already set in the cookie header.
@@ -308,7 +311,6 @@ class UMDAuth:
         url = ("https://return.umd.edu/api/daily?symptomsSaturday=false"
                "&symptomsSunday=false&lateShift=false")
         r = session.post(url, headers=headers, json=data)
-        print(r.status_code, r.content)
 
     def get_dining_dollars(self):
         session = self._new_session()
