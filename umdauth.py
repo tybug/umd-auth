@@ -45,7 +45,7 @@ class UMDAuth:
                 # allow empty lines
                 if line.isspace():
                     continue
-                code = int(line)
+                code = line.strip()
                 self.codes.append(code)
 
         print(f"initialized with codes {self.codes}")
@@ -258,7 +258,7 @@ class UMDAuth:
         codes = []
         for code_div in print_window.find_all("div",
             class_="SubDisplayElementFlex"):
-            codes.append(int(code_div.text))
+            codes.append(code_div.text)
 
         # our old codes are invalidate now, so overwrite them, both in the file
         # and in our `self.codes`.
