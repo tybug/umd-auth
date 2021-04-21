@@ -8,17 +8,18 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
-from config import USERNAME, PASSWORD, auth_cookies, identity_umd_jsession_id
-
 
 class UMDAuth():
     CODES_PATH = Path(__file__).parent / "codes.txt"
 
-    def __init__(self, auth_cookies=None, identity_umd_jsession_id=None):
+    def __init__(self, username, password, auth_cookies=None,
+        identity_jsession_id=None):
+        self.username = username
+        self.password = password
         # the cookies we get after we auth, which is all we need to get access
         # to other umd websites.
         self.auth_cookies = auth_cookies
-        self.identity_umd_jsession_id = identity_umd_jsession_id
+        self.identity_jsession_id = identity_jsession_id
 
 
         if not self.CODES_PATH.exists():
@@ -50,7 +51,7 @@ class UMDAuth():
             self.authenticate()
         session = requests.Session()
         add_dict_to_cookiejar(session.cookies, self.auth_cookies)
-        session.cookies.set("JSESSION", self.identity_umd_jsession_id,
+        session.cookies.set("JSESSION", self.identity_jsession_id,
             domain="identity.umd.edu", path="/")
         return session
 
@@ -191,10 +192,10 @@ class UMDAuth():
         #
         # As far as I can tell, this doesn't occur for other websites. They will
         # still accept the original JSESSIONID and don't issue a new one to us.
-        identity_umd_jsession_id = r.history[1].headers["set-cookie"] \
+        identity_jsession_id = r.history[1].headers["set-cookie"] \
                                                .split("JSESSIONID=")[1] \
                                                .split(";")[0]
-        self.identity_umd_jsession_id = identity_umd_jsession_id
+        self.identity_jsession_id = identity_jsession_id
 
         # With these two cookies, we are basically a god. We can make a request
         # to any umd website with full authentication permissions.
@@ -205,7 +206,7 @@ class UMDAuth():
         self.auth_cookies = cookies
 
         print("Authenticated. Creds: ", self.auth_cookies,
-            self.identity_umd_jsession_id)
+            self.identity_jsession_id)
 
         # we popped a code off our codes list at the beginning of this method,
         # so we need to remove it from our codes file as wll.
@@ -223,7 +224,7 @@ class UMDAuth():
             "duoAttributes.bypassCount": "10"
         }
 
-        session.cookies.set("JSESSIONID", self.identity_umd_jsession_id)
+        session.cookies.set("JSESSIONID", self.identity_jsession_id)
         r = session.post("https://identity.umd.edu/mfaprofile", data=data)
         soup = BeautifulSoup(r.content, features="lxml")
         print_window = soup.find(id="printWindow")
