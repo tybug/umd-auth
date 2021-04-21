@@ -178,6 +178,8 @@ class UMDAuth:
         driver = webdriver.Chrome(Path(__file__).parent / "chromedriver",
             options=options)
         driver.get(duo_iframe_source_url)
+        # TODO this errors with "list index out of range" randomly - race
+        # condition somewhere? I just retry whenever I hit that error currently.
         sid = driver.current_url.split("sid=")[1]
         sid = urllib.parse.unquote(sid)
 
@@ -215,6 +217,7 @@ class UMDAuth:
         # completed (which the login process will presumably go back to by
         # default when the survey is no longer a thing).
         assert len(r.history) != 0
+        print(f"len(r.history): {len(r.history)}")
         if len(r.history) == 1:
             shib_idp_session = (r.history[0].headers["set-cookie"]
                                     .split("shib_idp_session=")[1]
