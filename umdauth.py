@@ -236,7 +236,8 @@ class UMDAuth():
         print_window = soup.find(id="printWindow")
 
         codes = []
-        for code_div in print_window.find_all("div", class_="SubDisplayElementFlex"):
+        for code_div in print_window.find_all("div",
+            class_="SubDisplayElementFlex"):
             codes.append(int(code_div.text))
 
         # our old codes are invalidate now, so overwrite them, both in the file
