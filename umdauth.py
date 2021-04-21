@@ -207,21 +207,44 @@ class UMDAuth:
         add_dict_to_cookiejar(session.cookies, cookies)
 
         r = session.post(umd_shib_url, data=data, cookies=cookies)
-        shib_idp_session = r.history[0].headers["set-cookie"] \
-                                       .split("shib_idp_session=")[1] \
-                                       .split(";")[0]
 
-        # we're actually issued a *new* JSESSIONID just for the identity.umd.edu
-        # site. If we attempt to make requests with our first (and still valid)
-        # JSESSSIONID, they will be rejected, so store this new JSESSIONID for
-        # later use (if we want to make requests to identity.umd.edu later).
-        #
-        # As far as I can tell, this doesn't occur for other websites. They will
-        # still accept the original JSESSIONID and don't issue a new one to us.
-        identity_jsession_id = r.history[1].headers["set-cookie"] \
-                                               .split("JSESSIONID=")[1] \
-                                               .split(";")[0]
-        self.identity_jsession_id = identity_jsession_id
+        # ``len(history)`` used to be 2, but umd recently introduced a screen
+        # which would show if you haven't completed the daily symptom survey.
+        # The ``if``` branch deals with this scenario. the ``else`` branch deals
+        # with the 'normal' scenario of having your daily symptom survey
+        # completed (which the login process will presumably go back to by
+        # default when the survey is no longer a thing).
+        assert len(r.history) != 0
+        if len(r.history) == 1:
+            shib_idp_session = (r.history[0].headers["set-cookie"]
+                                    .split("shib_idp_session=")[1]
+                                    .split(";")[0])
+
+            umd_shib_url_ = umd_shib_url[:-1] + "3&_eventId_proceed=1"
+            r = session.get(umd_shib_url_)
+
+            cookie = r.history[1].headers["set-cookie"]
+            cookie = cookie.split("JSESSIONID=")[1]
+            cookie = cookie.split(";")[0]
+
+            self.identity_jsession_id = cookie
+        else:
+            shib_idp_session = (r.history[0].headers["set-cookie"]
+                                           .split("shib_idp_session=")[1]
+                                           .split(";")[0])
+
+            # we're actually issued a *new* JSESSIONID just for the identity.umd.edu
+            # site. If we attempt to make requests with our first (and still valid)
+            # JSESSSIONID, they will be rejected, so store this new JSESSIONID for
+            # later use (if we want to make requests to identity.umd.edu later).
+            #
+            # As far as I can tell, this doesn't occur for other websites. They will
+            # still accept the original JSESSIONID and don't issue a new one to us.
+            identity_jsession_id = (r.history[1].headers["set-cookie"]
+                                                   .split("JSESSIONID=")[1]
+                                                   .split(";")[0])
+            self.identity_jsession_id = identity_jsession_id
+
 
         # With these two cookies, we are basically a god. We can make a request
         # to any umd website with full authentication permissions.
