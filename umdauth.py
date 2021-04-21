@@ -280,6 +280,7 @@ class UMDAuth():
         # current amount of rollover dining dollars
         current = amounts[0]
         rollover = amounts[1]
+        # TODO: add transaction history as well
         return DiningDollars(current, rollover)
 
     def _write_codes(self):
