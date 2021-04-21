@@ -58,7 +58,10 @@ class UMDAuth():
 
     def authenticate(self):
         """
-        Authenticates with umd at the highest Tier known.
+        Authenticates with umd using https://identity.umd.edu/mfaprofile as
+        the base request. Authenticating with identity.umd.edu gives us the most
+        access to other sites (except notably
+        https://app.testudo.umd.edu/main/profile), which is why it was chosen.
 
         Notes
         -----
@@ -86,6 +89,11 @@ class UMDAuth():
         (2, 5)
         (3, 5)
         (4, 5)
+
+        Sites 1 and 2 are equally high up in the hierarchy, but neither grants
+        access to the other. So we have to pick one to authenticate with. I
+        chose 1. In the future we may authenticate with both (or only as
+        necessary for 2) for maximum coverage.
 
         Warnings
         --------
