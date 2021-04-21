@@ -108,8 +108,8 @@ class UMDAuth():
 
         cookies = {"JSESSIONID": jsession_id}
         data = {
-            "j_username": USERNAME,
-            "j_password": PASSWORD,
+            "j_username": self.username,
+            "j_password": self.password,
             "_eventId_proceed": ""
         }
         r = requests.post("https://shib.idm.umd.edu/shibboleth-idp/profile/cas"
